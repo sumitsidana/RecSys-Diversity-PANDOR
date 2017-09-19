@@ -48,7 +48,7 @@ import es.uam.eps.ir.ranksys.rec.runner.fast.FastFilters;
  * @author Saúl Vargas (saul.vargas@uam.es)
  * @author Pablo Castells (pablo.castells@uam.es)
  */
-public class RecommenderExample {
+public class DivRankALSExample {
 
 	public static void main(String[] args) throws IOException {
 		String userPath = args[0];
@@ -75,10 +75,8 @@ public class RecommenderExample {
 
 		int k = 50;
 		double lambda = 0.1;
-		double alpha = 0.05;
-		DoubleUnaryOperator confidence = x -> 1 + alpha * x;
 		int numIter = 10;
-		Factorization<Long, Long> divfactorization = new DivHKVFactorizer<Long, Long>(lambda, lambda, alpha, dist, confidence, numIter,true).factorize(k, trainData);
+		Factorization<Long, Long> divfactorization = new DivRankALSFactorizer<Long, Long>(lambda, dist,  numIter).factorize(k, trainData);
 		Recommender<Long, Long> recommender = new MFRecommender<>(userIndex, itemIndex, divfactorization);
 
 
@@ -91,7 +89,7 @@ public class RecommenderExample {
 		Function<Long, IntPredicate> filter = FastFilters.notInTrain(trainData);
 		int maxLength = 100;
 		RecommenderRunner<Long, Long> runner = new FastFilterRecommenderRunner<>(userIndex, itemIndex, targetUsers, format, filter, maxLength);
-		System.out.println("Running Div HKV");
+		System.out.println("Running Div RankALS");
 		runner.run(recommender, "divrankals");
 
 	}

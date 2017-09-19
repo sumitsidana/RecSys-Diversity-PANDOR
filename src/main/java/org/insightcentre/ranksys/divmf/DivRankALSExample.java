@@ -20,6 +20,7 @@ import java.util.function.Function;
 import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 
+import org.insightcentre.ranksys.divmf.DivRankALSFactorizer.DiversityRegulariser;
 
 import es.uam.eps.ir.ranksys.core.feature.FeatureData;
 import es.uam.eps.ir.ranksys.core.feature.SimpleFeatureData;
@@ -49,7 +50,6 @@ import es.uam.eps.ir.ranksys.rec.runner.fast.FastFilters;
  * @author Pablo Castells (pablo.castells@uam.es)
  */
 public class DivRankALSExample {
-
 	public static void main(String[] args) throws IOException {
 		String userPath = args[0];
 		String itemPath = args[1];
@@ -76,7 +76,8 @@ public class DivRankALSExample {
 		int k = 50;
 		double lambda = 0.1;
 		int numIter = 10;
-		Factorization<Long, Long> divfactorization = new DivRankALSFactorizer<Long, Long>(lambda, dist,  numIter).factorize(k, trainData);
+//		Factorization<Long, Long> divfactorization = new DivRankALSFactorizer<Long, Long>(lambda, dist,  numIter).factorize(k, trainData);
+		Factorization<Long, Long> divfactorization = new DivRankALSFactorizer<Long, Long>(lambda, dist,  numIter, true, DiversityRegulariser.P_LAPLACIAN_DQ).factorize(k, trainData);
 		Recommender<Long, Long> recommender = new MFRecommender<>(userIndex, itemIndex, divfactorization);
 
 

@@ -54,13 +54,13 @@ public class DivRankALSExample {
 		String userPath = args[0];
 		String itemPath = args[1];
 		String featureDataIndexPath = args[2];
-		String trainDataPath = args[3];
-		String testDataPath = args[4];
-		String featurePath = args[5];
+		String trainDataPath = args[2];
+		String testDataPath = args[3];
+		String featurePath = args[4];
 
 		FastUserIndex<Long> userIndex = SimpleFastUserIndex.load(userPath, lp);
 		FastItemIndex<Long> itemIndex = SimpleFastItemIndex.load(itemPath, lp);
-		FastFeatureIndex<Long> featureIndex = SimpleFastFeatureIndex.load(featureDataIndexPath, lp);
+		//		FastFeatureIndex<Long> featureIndex = SimpleFastFeatureIndex.load(featureDataIndexPath, lp);
 
 
 		FastPreferenceData<Long, Long> trainData = SimpleFastPreferenceData.load(trainDataPath, lp, lp, ddp, userIndex, itemIndex);
@@ -73,11 +73,11 @@ public class DivRankALSExample {
 		// RECOMMENDERS //
 		//////////////////
 
-		int k = 50;
-		double lambda = 0.1;
+		int k = 20;
+		double lambda = 0.5;
 		int numIter = 10;
-//		Factorization<Long, Long> divfactorization = new DivRankALSFactorizer<Long, Long>(lambda, dist,  numIter).factorize(k, trainData);
-		Factorization<Long, Long> divfactorization = new DivRankALSFactorizer<Long, Long>(lambda, dist,  numIter, true, DiversityRegulariser.P_LAPLACIAN_DQ).factorize(k, trainData);
+		Factorization<Long, Long> divfactorization = new DivRankALSFactorizer<Long, Long>(lambda, dist,  numIter).factorize(k, trainData);
+		//		Factorization<Long, Long> divfactorization = new DivRankALSFactorizer<Long, Long>(lambda, dist,  numIter, true, DiversityRegulariser.P_LAPLACIAN_DQ).factorize(k, trainData);
 		Recommender<Long, Long> recommender = new MFRecommender<>(userIndex, itemIndex, divfactorization);
 
 

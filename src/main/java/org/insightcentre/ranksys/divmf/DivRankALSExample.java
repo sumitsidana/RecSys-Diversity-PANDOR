@@ -53,7 +53,7 @@ public class DivRankALSExample {
 	public static void main(String[] args) throws IOException {
 		String userPath = args[0];
 		String itemPath = args[1];
-		String featureDataIndexPath = args[2];
+		//		String featureDataIndexPath = args[2];
 		String trainDataPath = args[2];
 		String testDataPath = args[3];
 		String featurePath = args[4];

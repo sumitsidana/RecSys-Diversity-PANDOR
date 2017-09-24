@@ -14,6 +14,8 @@ import static es.uam.eps.ir.ranksys.core.util.parsing.Parsers.sp;
 import static es.uam.eps.ir.ranksys.core.util.parsing.Parsers.dp;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.Function;
@@ -21,6 +23,7 @@ import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 
 import org.insightcentre.ranksys.divmf.DivRankALSFactorizer.DiversityRegulariser;
+import org.insightcentre.ranksys.novdiv.distance.CachedItemDistanceModel;
 
 import es.uam.eps.ir.ranksys.core.feature.FeatureData;
 import es.uam.eps.ir.ranksys.core.feature.SimpleFeatureData;
@@ -49,7 +52,7 @@ import es.uam.eps.ir.ranksys.rec.runner.fast.FastFilters;
  * @author Saúl Vargas (saul.vargas@uam.es)
  * @author Pablo Castells (pablo.castells@uam.es)
  */
-public class DivRankALSExample {
+public class DivRankALSExampleParamTune {
 	public static void main(String[] args) throws IOException {
 		String userPath = args[0];
 		String itemPath = args[1];
@@ -57,39 +60,56 @@ public class DivRankALSExample {
 		String testDataPath = args[3];
 		String featurePath = args[4];
 
+
 		FastUserIndex<Long> userIndex = SimpleFastUserIndex.load(userPath, lp);
 		FastItemIndex<Long> itemIndex = SimpleFastItemIndex.load(itemPath, lp);
-
-
 		FastPreferenceData<Long, Long> trainData = SimpleFastPreferenceData.load(trainDataPath, lp, lp, ddp, userIndex, itemIndex);
 		FastPreferenceData<Long, Long> testData = SimpleFastPreferenceData.load(testDataPath, lp, lp, ddp, userIndex, itemIndex);
-		FeatureData<Long, String, Double> featureData = SimpleFeatureData.load(featurePath, lp, sp, dp);
+		FeatureData<Long, String, Double> featureData = SimpleFeatureData.load(featurePath, lp, sp, v -> 1.0);
 
-		ItemDistanceModel<Long> dist = new CosineFeatureItemDistanceModel<>(featureData);
+		List<Double> lambdas = new ArrayList<Double> () ;
+		lambdas.add(0.5);
+		lambdas.add(-0.5);
 
-		//////////////////
-		// RECOMMENDERS //
-		//////////////////
+		List<Boolean>itemImportanceWeightingArray = new ArrayList<Boolean> ();
+		itemImportanceWeightingArray.add(true);
+		itemImportanceWeightingArray.add(false);
 
-		int k = 20;
-		double lambdaD = 0.5;
-		int numIter = 10;
-		//		Factorization<Long, Long> divfactorization = new DivRankALSFactorizer<Long, Long>(lambdaD, dist,  numIter).factorize(k, trainData);
-		Factorization<Long, Long> divfactorization = new DivRankALSFactorizer<Long, Long>(lambdaD, dist,  numIter, true, DiversityRegulariser.LAPLACIAN_DQ, true).factorize(k, trainData);
-		Recommender<Long, Long> recommender = new MFRecommender<>(userIndex, itemIndex, divfactorization);
+		List<Boolean>useSimilarityArray = new ArrayList<Boolean>();
+		useSimilarityArray.add(true);
+		useSimilarityArray.add(false);
 
+		List<DiversityRegulariser> regularisers = new ArrayList<DiversityRegulariser>();
+		regularisers.add(DiversityRegulariser.NONE);
+		regularisers.add(DiversityRegulariser.DQ);
+		regularisers.add(DiversityRegulariser.LAPLACIAN_DQ);
+		regularisers.add(DiversityRegulariser.P_LAPLACIAN_DQ);
 
+		for(double lambdaD: lambdas){
+			for(boolean itemImportanceWeighting: itemImportanceWeightingArray){
+				for(DiversityRegulariser regulariser: regularisers){
+					for(boolean useSimilarity: useSimilarityArray){
+						int k = 20;
+						int numIter = 10;
 
-		////////////////////////////////
-		// GENERATING RECOMMENDATIONS //
-		////////////////////////////////
-		Set<Long> targetUsers = testData.getUsersWithPreferences().collect(Collectors.toSet());
-		RecommendationFormat<Long, Long> format = new SimpleRecommendationFormat<>(lp, lp);
-		Function<Long, IntPredicate> filter = FastFilters.notInTrain(trainData);
-		int maxLength = 20;
-		RecommenderRunner<Long, Long> runner = new FastFilterRecommenderRunner<>(userIndex, itemIndex, targetUsers, format, filter, maxLength);
-		System.out.println("Running Div RankALS");
-		runner.run(recommender, "divrankals");
+						ItemDistanceModel<Long> dist = new CachedItemDistanceModel<>(new CosineFeatureItemDistanceModel<>(featureData), itemIndex);
+
+						Factorization<Long, Long> factorization = new DivRankALSFactorizer<Long, Long>(lambdaD, dist, numIter, itemImportanceWeighting, regulariser, useSimilarity).factorize(k, trainData);
+
+						Recommender<Long, Long> recommender = new MFRecommender<>(userIndex, itemIndex, factorization);
+
+						Set<Long> targetUsers = testData.getUsersWithPreferences().collect(Collectors.toSet());
+						RecommendationFormat<Long, Long> format = new SimpleRecommendationFormat<>(lp, lp);
+						Function<Long, IntPredicate> filter = FastFilters.notInTrain(trainData);
+						int maxLength = 20;
+						RecommenderRunner<Long, Long> runner = new FastFilterRecommenderRunner<>(userIndex, itemIndex, targetUsers, format, filter, maxLength);
+
+						System.out.println("Running");
+						runner.run(recommender, "divrankals_"+lambdaD+"_"+itemImportanceWeighting+"_"+regulariser+"_"+useSimilarity);
+					}
+				}
+			}
+		}
 
 	}
 }

@@ -21,6 +21,7 @@ import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 
 import org.insightcentre.ranksys.divmf.DivRankALSFactorizer.DiversityRegulariser;
+import org.insightcentre.ranksys.novdiv.distance.CachedItemDistanceModel;
 
 import es.uam.eps.ir.ranksys.core.feature.FeatureData;
 import es.uam.eps.ir.ranksys.core.feature.SimpleFeatureData;
@@ -49,7 +50,7 @@ import es.uam.eps.ir.ranksys.rec.runner.fast.FastFilters;
  * @author Saúl Vargas (saul.vargas@uam.es)
  * @author Pablo Castells (pablo.castells@uam.es)
  */
-public class DivRankALSExample {
+public class DivRankALSExampleV1 {
 	public static void main(String[] args) throws IOException {
 		String userPath = args[0];
 		String itemPath = args[1];
@@ -57,39 +58,30 @@ public class DivRankALSExample {
 		String testDataPath = args[3];
 		String featurePath = args[4];
 
-		FastUserIndex<Long> userIndex = SimpleFastUserIndex.load(userPath, lp);
-		FastItemIndex<Long> itemIndex = SimpleFastItemIndex.load(itemPath, lp);
 
+FastUserIndex<Long> userIndex = SimpleFastUserIndex.load(userPath, lp);
+FastItemIndex<Long> itemIndex = SimpleFastItemIndex.load(itemPath, lp);
+FastPreferenceData<Long, Long> trainData = SimpleFastPreferenceData.load(trainDataPath, lp, lp, ddp, userIndex, itemIndex);
+FastPreferenceData<Long, Long> testData = SimpleFastPreferenceData.load(testDataPath, lp, lp, ddp, userIndex, itemIndex);
+FeatureData<Long, String, Double> featureData = SimpleFeatureData.load(featurePath, lp, sp, v -> 1.0);
 
-		FastPreferenceData<Long, Long> trainData = SimpleFastPreferenceData.load(trainDataPath, lp, lp, ddp, userIndex, itemIndex);
-		FastPreferenceData<Long, Long> testData = SimpleFastPreferenceData.load(testDataPath, lp, lp, ddp, userIndex, itemIndex);
-		FeatureData<Long, String, Double> featureData = SimpleFeatureData.load(featurePath, lp, sp, dp);
+int k = 20;
+int numIter = 10;
+double lambdaD = 0.5;
+ItemDistanceModel<Long> dist = new CachedItemDistanceModel<>(new CosineFeatureItemDistanceModel<>(featureData), itemIndex);
 
-		ItemDistanceModel<Long> dist = new CosineFeatureItemDistanceModel<>(featureData);
+Factorization<Long, Long> factorization = new DivRankALSFactorizer<Long, Long>(lambdaD, dist, numIter, true, DiversityRegulariser.LAPLACIAN_DQ, false).factorize(k, trainData);
 
-		//////////////////
-		// RECOMMENDERS //
-		//////////////////
+Recommender<Long, Long> recommender = new MFRecommender<>(userIndex, itemIndex, factorization);
 
-		int k = 20;
-		double lambdaD = 0.5;
-		int numIter = 10;
-		//		Factorization<Long, Long> divfactorization = new DivRankALSFactorizer<Long, Long>(lambdaD, dist,  numIter).factorize(k, trainData);
-		Factorization<Long, Long> divfactorization = new DivRankALSFactorizer<Long, Long>(lambdaD, dist,  numIter, true, DiversityRegulariser.LAPLACIAN_DQ, true).factorize(k, trainData);
-		Recommender<Long, Long> recommender = new MFRecommender<>(userIndex, itemIndex, divfactorization);
+Set<Long> targetUsers = testData.getUsersWithPreferences().collect(Collectors.toSet());
+RecommendationFormat<Long, Long> format = new SimpleRecommendationFormat<>(lp, lp);
+Function<Long, IntPredicate> filter = FastFilters.notInTrain(trainData);
+int maxLength = 20;
+RecommenderRunner<Long, Long> runner = new FastFilterRecommenderRunner<>(userIndex, itemIndex, targetUsers, format, filter, maxLength);
 
-
-
-		////////////////////////////////
-		// GENERATING RECOMMENDATIONS //
-		////////////////////////////////
-		Set<Long> targetUsers = testData.getUsersWithPreferences().collect(Collectors.toSet());
-		RecommendationFormat<Long, Long> format = new SimpleRecommendationFormat<>(lp, lp);
-		Function<Long, IntPredicate> filter = FastFilters.notInTrain(trainData);
-		int maxLength = 20;
-		RecommenderRunner<Long, Long> runner = new FastFilterRecommenderRunner<>(userIndex, itemIndex, targetUsers, format, filter, maxLength);
-		System.out.println("Running Div RankALS");
-		runner.run(recommender, "divrankals");
+System.out.println("Running");
+runner.run(recommender, "divrankalsv1");
 
 	}
 }

@@ -8,10 +8,8 @@ for item_importance in true false
   do
   for use_similarity_array in true false
   do
-  cat "diversity/${lambdaD}_${item_importance}_${regularizer}_${use_similarity_array}" "not_diversity/${lambdaD}_${item_importance}_NONE_${use_similarity_array}" > "all_users/${lambdaD}_${item_importance}_${regularizer}_${use_similarity_array}"
+  cat "diversity/divrankals_${lambdaD}_${item_importance}_${regularizer}_${use_similarity_array}" "not_diversity/divrankals_${lambdaD}_${item_importance}_NONE_${use_similarity_array}" > "all_users/divrankals_${lambdaD}_${item_importance}_${regularizer}_${use_similarity_array}"
   done
   done
   done
 done
-
-

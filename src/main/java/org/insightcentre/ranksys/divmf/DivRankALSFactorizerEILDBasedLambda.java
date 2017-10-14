@@ -16,6 +16,7 @@ import cern.colt.matrix.linalg.LUDecompositionQuick;
 import es.uam.eps.ir.ranksys.fast.preference.FastPreferenceData;
 import es.uam.eps.ir.ranksys.mf.als.ALSFactorizer;
 import es.uam.eps.ir.ranksys.novdiv.distance.ItemDistanceModel;
+import it.unimi.dsi.fastutil.ints.IntIterator;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,8 +24,10 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 /**
  * Ranking matrix factorization with diversity
@@ -41,6 +44,7 @@ public class DivRankALSFactorizerEILDBasedLambda<U, I> extends ALSFactorizer<U, 
 	private final boolean useSimilarity;
 	private final ItemDistanceModel<I> distanceModel;
 	private final DiversityRegulariser regulariser;
+	private final Map<Long,Double>userEILDMap;
 
 	private boolean pre = false;
 
@@ -51,28 +55,29 @@ public class DivRankALSFactorizerEILDBasedLambda<U, I> extends ALSFactorizer<U, 
 	private DoubleMatrix1D divDot;
 
 	public DivRankALSFactorizerEILDBasedLambda(double lambdaD, ItemDistanceModel<I> distanceModel,
-			int numIter) {
-		this(lambdaD, distanceModel, numIter, false, DiversityRegulariser.NONE, false);
+			int numIter,  Map<Long,Double>userEILDMap) {
+		this(lambdaD, distanceModel, numIter, false, DiversityRegulariser.NONE, false, userEILDMap );
 	}
 
 	public DivRankALSFactorizerEILDBasedLambda(double lambdaD, ItemDistanceModel<I> distanceModel,
-			int numIter, boolean supportBasedWeighting) {
-		this(lambdaD, distanceModel, numIter, supportBasedWeighting, DiversityRegulariser.NONE, false);
+			int numIter, boolean supportBasedWeighting, Map<Long,Double>userEILDMap) {
+		this(lambdaD, distanceModel, numIter, supportBasedWeighting, DiversityRegulariser.NONE, false, userEILDMap);
 	}
 
 	public DivRankALSFactorizerEILDBasedLambda(double lambdaD, ItemDistanceModel<I> distanceModel,
-			int numIter, boolean supportBasedWeighting, DiversityRegulariser regulariser) {
-		this(lambdaD, distanceModel, numIter, supportBasedWeighting, regulariser, false);
+			int numIter, boolean supportBasedWeighting, DiversityRegulariser regulariser, Map<Long,Double>userEILDMap) {
+		this(lambdaD, distanceModel, numIter, supportBasedWeighting, regulariser, false,  userEILDMap);
 	}
 
 	public DivRankALSFactorizerEILDBasedLambda(double lambdaD, ItemDistanceModel<I> distanceModel,
-			int numIter, boolean supportBasedWeighting, DiversityRegulariser regulariser, boolean useSimilarity) {
+			int numIter, boolean supportBasedWeighting, DiversityRegulariser regulariser, boolean useSimilarity, Map<Long, Double> userEILDMap) {
 		super(numIter);
 		this.lambdaD = lambdaD;
 		this.distanceModel = distanceModel;
 		this.supportBasedWeighting = supportBasedWeighting;
 		this.regulariser = regulariser;
 		this.useSimilarity = useSimilarity;
+		this.userEILDMap = userEILDMap;
 	}
 
 	@Override
@@ -82,21 +87,7 @@ public class DivRankALSFactorizerEILDBasedLambda<U, I> extends ALSFactorizer<U, 
 
 	@Override
 	public void set_minP(final DenseDoubleMatrix2D p, final DenseDoubleMatrix2D q, FastPreferenceData<U, I> data) {
-		Map<Long,Double>userEILDMap = new LinkedHashMap<Long,Double>();
 
-		try (BufferedReader br = new BufferedReader(new FileReader(new File("/data/sidana/diversity/user_based_diversity/ml20m")))) {
-			String line;
-			while ((line = br.readLine()) != null) {
-				String [] array = line.split("\t");
-				userEILDMap.put(Long.parseLong(array[0]), Double.parseDouble(array[1]));
-			}
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		final int K = p.columns();
 		final int nusers = data.numUsers();
 
@@ -180,8 +171,8 @@ public class DivRankALSFactorizerEILDBasedLambda<U, I> extends ALSFactorizer<U, 
 				DoubleMatrix1D divReg = new DenseDoubleMatrix1D(K);
 				DoubleMatrix1D pu = p.viewRow(uidx);
 				divReg.assign(ALG.mult(QtdivQ, pu), (x, y) -> x - y);
-				//				b.assign(divReg, (x, y) -> x + lambdaD / nusers * y);
-				b.assign(divReg, (x, y) -> x + userEILDMap.get(uidx) / nusers * y);
+				U u = data.uidx2user(uidx);
+				b.assign(divReg, (x, y) -> x + userEILDMap.get((Long)u) / nusers * y);
 			}
 
 			LUDecompositionQuick lu = new LUDecompositionQuick(0);

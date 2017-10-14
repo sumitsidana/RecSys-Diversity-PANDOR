@@ -13,9 +13,15 @@ import static es.uam.eps.ir.ranksys.core.util.parsing.Parsers.lp;
 import static es.uam.eps.ir.ranksys.core.util.parsing.Parsers.sp;
 import static es.uam.eps.ir.ranksys.core.util.parsing.Parsers.dp;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.Function;
@@ -91,10 +97,24 @@ public class DivRankALSExampleEILDBasedLambda {
 					for(boolean useSimilarity: useSimilarityArray){
 						int k = 20;
 						int numIter = 10;
+						Map<Long,Double>userEILDMap = new LinkedHashMap<Long,Double>();
 
+						try (BufferedReader br = new BufferedReader(new FileReader(new File("/data/sidana/diversity/user_based_diversity/ml20m/eildbasedlambda/eild_per_user")))) {
+							String line;
+							while ((line = br.readLine()) != null) {
+								String [] array = line.split("\t");
+								userEILDMap.put(Long.parseLong(array[0]), Double.parseDouble(array[1]));
+							}
+						} catch (FileNotFoundException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 						ItemDistanceModel<Long> dist = new CachedItemDistanceModel<>(new CosineFeatureItemDistanceModel<>(featureData), itemIndex);
 						//						Factorization<Long, Long> factorization = new DivRankALSFactorizer<Long, Long>(lambdaD, dist, numIter, itemImportanceWeighting, regulariser, useSimilarity).factorize(k, trainData);
-						Factorization<Long, Long> factorization = new DivRankALSFactorizerEILDBasedLambda<Long, Long>(lambdaD, dist, numIter, itemImportanceWeighting, regulariser, useSimilarity).factorize(k, trainData);
+						Factorization<Long, Long> factorization = new DivRankALSFactorizerEILDBasedLambda<Long, Long>(lambdaD, dist, numIter, itemImportanceWeighting, regulariser, useSimilarity, userEILDMap).factorize(k, trainData);
 
 						Recommender<Long, Long> recommender = new MFRecommender<>(userIndex, itemIndex, factorization);
 

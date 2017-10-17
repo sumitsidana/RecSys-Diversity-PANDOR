@@ -74,8 +74,8 @@ public class DivRankALSExampleEILDBasedLambda {
 		FeatureData<Long, String, Double> featureData = SimpleFeatureData.load(featurePath, lp, sp, v -> 1.0);
 
 		List<Double> lambdas = new ArrayList<Double> () ;
-		lambdas.add(0.5);
-		lambdas.add(-0.5);
+		lambdas.add(1.0);
+		lambdas.add(-1.0);
 
 		List<Boolean>itemImportanceWeightingArray = new ArrayList<Boolean> ();
 		itemImportanceWeightingArray.add(true);

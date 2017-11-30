@@ -65,7 +65,8 @@ public class DivRankALSExampleParamTune {
 		FastItemIndex<Long> itemIndex = SimpleFastItemIndex.load(itemPath, lp);
 		FastPreferenceData<Long, Long> trainData = SimpleFastPreferenceData.load(trainDataPath, lp, lp, ddp, userIndex, itemIndex);
 		FastPreferenceData<Long, Long> testData = SimpleFastPreferenceData.load(testDataPath, lp, lp, ddp, userIndex, itemIndex);
-		FeatureData<Long, String, Double> featureData = SimpleFeatureData.load(featurePath, lp, sp, v -> 1.0);
+		//		FeatureData<Long, String, Double> featureData = SimpleFeatureData.load(featurePath, lp, sp, v -> 1.0);
+		FeatureData<Long, String, Double> featureData = SimpleFeatureData.load(featurePath, lp, sp, dp);
 
 		List<Double> lambdas = new ArrayList<Double> () ;
 		lambdas.add(0.5);

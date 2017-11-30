@@ -176,7 +176,7 @@ public class DivRankALSFactorizerEILDBasedLambda<U, I> extends ALSFactorizer<U, 
 				 * Take EILD as lambda instead of lambdaD
 				 */
 				U u = data.uidx2user(uidx);
-				double userBasedLambda = userEILDMap.get((Long)u)*lambdaD;
+				double userBasedLambda = userEILDMap.get((Long)u)*lambdaD*2.0;
 				b.assign(divReg, (x, y) -> x + userBasedLambda / nusers * y);
 			}
 
@@ -285,7 +285,7 @@ public class DivRankALSFactorizerEILDBasedLambda<U, I> extends ALSFactorizer<U, 
 				numUsers++;
 			}
 			double mean = sum/numUsers;
-			double userBasedLambda = lambdaD*mean;
+			double userBasedLambda = lambdaD*mean*2.0;
 			/*
 			 * Now take this mean as lambda
 			 */

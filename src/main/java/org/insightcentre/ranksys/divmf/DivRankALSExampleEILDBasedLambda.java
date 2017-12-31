@@ -71,11 +71,12 @@ public class DivRankALSExampleEILDBasedLambda {
 		FastItemIndex<Long> itemIndex = SimpleFastItemIndex.load(itemPath, lp);
 		FastPreferenceData<Long, Long> trainData = SimpleFastPreferenceData.load(trainDataPath, lp, lp, ddp, userIndex, itemIndex);
 		FastPreferenceData<Long, Long> testData = SimpleFastPreferenceData.load(testDataPath, lp, lp, ddp, userIndex, itemIndex);
-		FeatureData<Long, String, Double> featureData = SimpleFeatureData.load(featurePath, lp, sp, v -> 1.0);
+		//		FeatureData<Long, String, Double> featureData = SimpleFeatureData.load(featurePath, lp, sp, v -> 1.0);
+		FeatureData<Long, String, Double> featureData = SimpleFeatureData.load(featurePath, lp, sp, dp);
 
 		List<Double> lambdas = new ArrayList<Double> () ;
-		lambdas.add(1.0);
-		lambdas.add(-1.0);
+		lambdas.add(0.5);
+		lambdas.add(-0.5);
 
 		List<Boolean>itemImportanceWeightingArray = new ArrayList<Boolean> ();
 		itemImportanceWeightingArray.add(true);
@@ -99,7 +100,7 @@ public class DivRankALSExampleEILDBasedLambda {
 						int numIter = 10;
 						Map<Long,Double>userEILDMap = new LinkedHashMap<Long,Double>();
 
-						try (BufferedReader br = new BufferedReader(new FileReader(new File("/data/sidana/diversity/user_based_diversity/ml20m/eildbasedlambda/eild_per_user")))) {
+						try (BufferedReader br = new BufferedReader(new FileReader(new File("/data/sidana/diversity/user_based_diversity/purch/eild_per_user")))) {
 							String line;
 							while ((line = br.readLine()) != null) {
 								String [] array = line.split("\t");

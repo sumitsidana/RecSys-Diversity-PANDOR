@@ -127,7 +127,6 @@ public class DivRankALSFactorizerEILDBasedLambda<U, I> extends ALSFactorizer<U, 
 				QtdivQ.assign(Ls[iidx], (x, y) -> x + y);
 			});
 		}
-
 		data.getUidxWithPreferences().parallel().forEach(uidx -> {
 			DoubleMatrix2D sum_cqq = new DenseDoubleMatrix2D(K, K);
 			DoubleMatrix1D sum_cq = new DenseDoubleMatrix1D(K);
@@ -176,8 +175,14 @@ public class DivRankALSFactorizerEILDBasedLambda<U, I> extends ALSFactorizer<U, 
 				 * Take EILD as lambda instead of lambdaD
 				 */
 				U u = data.uidx2user(uidx);
-				double userBasedLambda = userEILDMap.get((Long)u)*lambdaD*2.0;
-				b.assign(divReg, (x, y) -> x + userBasedLambda / nusers * y);
+
+				if(userEILDMap.containsKey(u)){
+					//					userBasedLambda = userEILDMap.get((Long)u)*lambdaD;
+					b.assign(divReg, (x, y) -> x + (userEILDMap.get((Long)u)*lambdaD) / nusers * y);
+				}
+				else{
+					b.assign(divReg, (x, y) -> x + (1.0*lambdaD) / nusers * y);
+				}
 			}
 
 			LUDecompositionQuick lu = new LUDecompositionQuick(0);
@@ -280,12 +285,14 @@ public class DivRankALSFactorizerEILDBasedLambda<U, I> extends ALSFactorizer<U, 
 			while(iterator.hasNext()){
 				int uidx = iterator.next();
 				U u = data.uidx2user(uidx);
-				double eild = userEILDMap.get((Long)u);
+				double eild = 0.5;
+				if(userEILDMap.containsKey(u))
+					eild = userEILDMap.get((Long)u);
 				sum = sum+eild;
 				numUsers++;
 			}
 			double mean = sum/numUsers;
-			double userBasedLambda = lambdaD*mean*2.0;
+			double userBasedLambda = lambdaD*mean;
 			/*
 			 * Now take this mean as lambda
 			 */
@@ -331,15 +338,15 @@ public class DivRankALSFactorizerEILDBasedLambda<U, I> extends ALSFactorizer<U, 
 				DoubleMatrix1D qi = q.viewRow(iidx);
 				divReg.assign(sum_d_q[iidx]);
 				divReg.assign(qi, (x, y) -> x - y * divDot.getQuick(iidx));
-				//				b.assign(divReg, (x, y) -> x + lambdaD * y);
-				b.assign(divReg, (x, y) -> x + userBasedLambda * y);
+				b.assign(divReg, (x, y) -> x + lambdaD * y);
+				//				b.assign(divReg, (x, y) -> x + userBasedLambda * y);
 			}
 			break;
 			case DQ: {
 				DoubleMatrix1D divReg = new DenseDoubleMatrix1D(K);
 				divReg.assign(sum_d_q[iidx], (x, y) -> x - y);
-				//				b.assign(divReg, (x, y) -> x + lambdaD * y);
-				b.assign(divReg, (x, y) -> x + userBasedLambda * y);
+				b.assign(divReg, (x, y) -> x + lambdaD * y);
+				//				b.assign(divReg, (x, y) -> x + userBasedLambda * y);
 			}
 			break;
 			case P_LAPLACIAN_DQ: {
@@ -348,8 +355,8 @@ public class DivRankALSFactorizerEILDBasedLambda<U, I> extends ALSFactorizer<U, 
 				divReg.assign(sum_d_q[iidx]);
 				divReg.assign(qi, (x, y) -> x - y * divDot.getQuick(iidx));
 				divReg = ALG.mult(PtP, divReg);
-				//				b.assign(divReg, (x, y) -> x + lambdaD / nusers * y);
-				b.assign(divReg, (x, y) -> x + userBasedLambda * y);
+				b.assign(divReg, (x, y) -> x + lambdaD / nusers * y);
+				//				b.assign(divReg, (x, y) -> x + userBasedLambda * y);
 			}
 			break;
 			}

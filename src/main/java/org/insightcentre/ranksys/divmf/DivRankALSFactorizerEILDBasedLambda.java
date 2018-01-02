@@ -178,7 +178,7 @@ public class DivRankALSFactorizerEILDBasedLambda<U, I> extends ALSFactorizer<U, 
 
 				if(userEILDMap.containsKey(u)){
 					//					userBasedLambda = userEILDMap.get((Long)u)*lambdaD;
-					b.assign(divReg, (x, y) -> x + (userEILDMap.get((Long)u)*lambdaD) / nusers * y);
+					b.assign(divReg, (x, y) -> x + (userEILDMap.get((Long)u)*lambdaD*1.0) / nusers * y);
 				}
 				else{
 					b.assign(divReg, (x, y) -> x + (1.0*lambdaD) / nusers * y);
@@ -285,9 +285,9 @@ public class DivRankALSFactorizerEILDBasedLambda<U, I> extends ALSFactorizer<U, 
 			while(iterator.hasNext()){
 				int uidx = iterator.next();
 				U u = data.uidx2user(uidx);
-				double eild = 0.5;
+				double eild = lambdaD;
 				if(userEILDMap.containsKey(u))
-					eild = userEILDMap.get((Long)u);
+					eild = userEILDMap.get((Long)u)*lambdaD*2.0;
 				sum = sum+eild;
 				numUsers++;
 			}

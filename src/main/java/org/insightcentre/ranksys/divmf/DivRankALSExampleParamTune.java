@@ -90,7 +90,7 @@ public class DivRankALSExampleParamTune {
 			for(boolean itemImportanceWeighting: itemImportanceWeightingArray){
 				for(DiversityRegulariser regulariser: regularisers){
 					for(boolean useSimilarity: useSimilarityArray){
-						int k = 20;
+						int k = 3;
 						int numIter = 10;
 
 						ItemDistanceModel<Long> dist = new CachedItemDistanceModel<>(new CosineFeatureItemDistanceModel<>(featureData), itemIndex);
@@ -101,7 +101,8 @@ public class DivRankALSExampleParamTune {
 
 						Set<Long> targetUsers = testData.getUsersWithPreferences().collect(Collectors.toSet());
 						RecommendationFormat<Long, Long> format = new SimpleRecommendationFormat<>(lp, lp);
-						Function<Long, IntPredicate> filter = FastFilters.notInTrain(trainData);
+						//						Function<Long, IntPredicate> filter = FastFilters.notInTrain(trainData);
+						Function<Long, IntPredicate> filter = FastFilters.all();
 						int maxLength = 20;
 						RecommenderRunner<Long, Long> runner = new FastFilterRecommenderRunner<>(userIndex, itemIndex, targetUsers, format, filter, maxLength);
 

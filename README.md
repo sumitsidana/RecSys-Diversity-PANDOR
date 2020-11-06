@@ -18,7 +18,7 @@ This repository uses:
 # Dataset
 https://archive.ics.uci.edu/ml/datasets/PANDOR
 
-# Acknowldgments
+# Acknowledgments
 
 - Jacek Wasilewski's [work](https://github.com/jacekwasilewski/RankSys-DivMF)
 - [RankSys](https://github.com/RankSys/RankSys)

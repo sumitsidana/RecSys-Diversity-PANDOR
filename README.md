@@ -15,4 +15,7 @@ This repository uses:
 - Diversity Loss Function
 - EILD as evaluation metric
 
-This work expands on Jacek Wasilewski's [work](https://github.com/jacekwasilewski/RankSys-DivMF)
+# Acknowldgments:
+
+- Jacek Wasilewski's [work](https://github.com/jacekwasilewski/RankSys-DivMF)
+- [RankSys](https://github.com/RankSys/RankSys)

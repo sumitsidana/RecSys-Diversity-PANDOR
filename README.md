@@ -12,10 +12,13 @@
 This repository uses:
 
 - Matrix Factorisation
-- Diversity Loss Function
+- Diversity-Based Loss Function
 - EILD as evaluation metric
 
-# Acknowldgments:
+# Dataset
+https://archive.ics.uci.edu/ml/datasets/PANDOR
+
+# Acknowldgments
 
 - Jacek Wasilewski's [work](https://github.com/jacekwasilewski/RankSys-DivMF)
 - [RankSys](https://github.com/RankSys/RankSys)

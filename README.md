@@ -16,7 +16,7 @@ This repository uses:
 - EILD as evaluation metric
 
 # Dataset
-https://archive.ics.uci.edu/ml/datasets/PANDOR
+[PANDOR](https://archive.ics.uci.edu/ml/datasets/PANDOR)
 
 # Acknowledgments
 

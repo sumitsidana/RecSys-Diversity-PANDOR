@@ -12,7 +12,7 @@
 This repository uses:
 
 - Matrix Factorisation
-- Diversity-Based Loss Function
+- Multi-Objective Relevance and Diversity-Based Loss Function
 - EILD as evaluation metric
 
 # Dataset
